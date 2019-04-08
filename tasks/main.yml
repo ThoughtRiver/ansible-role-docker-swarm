@@ -1,3 +1,4 @@
+---
 
 - name: get all cluster nodes
   set_fact:
@@ -8,10 +9,11 @@
 
 - include: swarm_cluster_get_control_manager.yml
 
-- block:
-  - include: swarm_cluster_bootstrap.yml
-  - include: swarm_cluster_get_control_manager.yml
-  when: swarm_cluster_control_manager is undefined
+- name: swarm control manager is undefined
+  block:
+    - include: swarm_cluster_bootstrap.yml
+    - include: swarm_cluster_get_control_manager.yml
+  when: swarm_cluster_control_manager is not defined
 
 - include: swarm_cluster_state.yml
 
@@ -24,4 +26,3 @@
   include: swarm_cluster_manage_workers.yml
 
 - include: swarm_cluster_wait_for_pending_commands.yml
-

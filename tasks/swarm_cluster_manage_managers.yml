@@ -1,3 +1,4 @@
+---
 
 - name: get command for joining managers to the swarm cluster
   run_once: true
@@ -38,4 +39,3 @@
   command: "docker node update --availability drain {{ hostvars[item].ansible_hostname }}"
   with_items: "{{ swarm_cluster_existing_nodes }}"
   when: hostvars[item].swarm_node_transition_manager_to_drained
-

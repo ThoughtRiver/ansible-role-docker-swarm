@@ -1,3 +1,4 @@
+---
 
 - name: get active managers
   run_once: true
@@ -25,7 +26,8 @@
   with_items: "{{ swarm_cluster_managers }}"
   when: hostvars[item].swarm_node_manager
 
-- debug: msg="Manager node{{ ':' }} {{ swarm_cluster_control_manager }}"
+- name: debug swarm control manager
+  debug:
+    msg: "Manager node{{ ':' }} {{ swarm_cluster_control_manager }}"
   run_once: true
   when: swarm_cluster_control_manager is defined
-

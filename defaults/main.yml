@@ -1,3 +1,4 @@
+---
 
 # set parameters to bootstrap a node
 swarm_cluster_bootstrap_parameters:

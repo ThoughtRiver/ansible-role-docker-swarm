@@ -1,3 +1,4 @@
+---
 
 - name: get command for joining workers to the swarm cluster
   run_once: true
@@ -35,38 +36,37 @@
   command: "docker node update --availability drain {{ hostvars[item].ansible_hostname }}"
   with_items: "{{ swarm_cluster_existing_nodes }}"
   when: hostvars[item].swarm_node_transition_worker_to_drained
-  
+
 - block:
-  - name: leave cluster
-    become: true
-    delegate_to: "{{ item }}"
-    command: "docker swarm leave"
-    with_items: "{{ swarm_cluster_existing_nodes }}"
-    # if node isn't reachable from manager, then don't connect to node
-    when: >
-      hostvars[item].swarm_node_status == 'ready'
-      and hostvars[item].swarm_node_transition_remove_node
-  
-  - include: swarm_cluster_wait_for_pending_commands.yml
+    - name: leave cluster
+      become: true
+      delegate_to: "{{ item }}"
+      command: "docker swarm leave"
+      with_items: "{{ swarm_cluster_existing_nodes }}"
+      # if node isn't reachable from manager, then don't connect to node
+      when: >
+        hostvars[item].swarm_node_status == 'ready'
+        and hostvars[item].swarm_node_transition_remove_node
 
-  - name: wait node down
-    run_once: true
-    become: true
-    delegate_to: "{{ swarm_cluster_control_manager }}"
-    shell: "docker node ls --filter name={{ hostvars[item].ansible_hostname }} --format '{% raw %}{{ lower .Status }}{% endraw %}' | grep down || echo ''"
-    register: swarm_node_status_down_result
-    with_items: "{{ swarm_cluster_existing_nodes }}"
-    when: hostvars[item].swarm_node_transition_remove_node
-    retries: 5
-    delay: 3
-    until: swarm_node_status_down_result.stdout == "down"
-    changed_when: false
+    - include: swarm_cluster_wait_for_pending_commands.yml
 
-  - name: remove nodes from cluster
-    run_once: true
-    become: true
-    delegate_to: "{{ swarm_cluster_control_manager }}"
-    command: "docker node rm {{ hostvars[item].ansible_hostname }}"
-    with_items: "{{ swarm_cluster_existing_nodes }}"
-    when: hostvars[item].swarm_node_transition_remove_node
+    - name: wait node down
+      run_once: true
+      become: true
+      delegate_to: "{{ swarm_cluster_control_manager }}"
+      shell: "docker node ls --filter name={{ hostvars[item].ansible_hostname }} --format '{% raw %}{{ lower .Status }}{% endraw %}' | grep down || echo ''"
+      register: swarm_node_status_down_result
+      with_items: "{{ swarm_cluster_existing_nodes }}"
+      when: hostvars[item].swarm_node_transition_remove_node
+      retries: 5
+      delay: 3
+      until: swarm_node_status_down_result.stdout == "down"
+      changed_when: false
 
+    - name: remove nodes from cluster
+      run_once: true
+      become: true
+      delegate_to: "{{ swarm_cluster_control_manager }}"
+      command: "docker node rm {{ hostvars[item].ansible_hostname }}"
+      with_items: "{{ swarm_cluster_existing_nodes }}"
+      when: hostvars[item].swarm_node_transition_remove_node
